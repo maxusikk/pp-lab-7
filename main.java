@@ -9,7 +9,8 @@ import javafx.stage.DirectoryChooser;
 import javafx.stage.Stage;
 
 import java.io.File;
-import java.util.Objects;
+import java.io.IOException;
+import java.nio.file.Files;
 
 public class Main extends Application {
 
@@ -66,6 +67,12 @@ public class Main extends Application {
             return;
         }
 
+        String searchPhrase = searchField.getText().trim();
+        if (searchPhrase.isEmpty()) {
+            resultArea.setText("Please enter a search phrase.");
+            return;
+        }
+
         File directory = new File(directoryPath);
         if (!directory.isDirectory()) {
             resultArea.setText("The provided path is not a directory.");
@@ -73,18 +80,35 @@ public class Main extends Application {
         }
 
         StringBuilder results = new StringBuilder();
-        listFilesInDirectory(directory, results);
+        try {
+            searchInDirectory(directory, searchPhrase, results);
+        } catch (IOException e) {
+            e.printStackTrace();
+            resultArea.setText("Error occurred while searching files.");
+            return;
+        }
+
         resultArea.setText(results.toString());
     }
 
-    private void listFilesInDirectory(File directory, StringBuilder results) {
+    private boolean containsPhrase(File file, String searchPhrase) throws IOException {
+        try {
+            return Files.lines(file.toPath()).anyMatch(line -> line.contains(searchPhrase));
+        } catch (IOException e) {
+            throw new IOException("Error reading file: " + file.getAbsolutePath(), e);
+        }
+    }
+
+    private void searchInDirectory(File directory, String searchPhrase, StringBuilder results) throws IOException {
         File[] files = directory.listFiles();
         if (files != null) {
             for (File file : files) {
                 if (file.isDirectory()) {
-                    listFilesInDirectory(file, results);
+                    searchInDirectory(file, searchPhrase, results);
                 } else {
-                    results.append(file.getAbsolutePath()).append("\n");
+                    if (containsPhrase(file, searchPhrase)) {
+                        results.append(file.getAbsolutePath()).append("\n");
+                    }
                 }
             }
         }
