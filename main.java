@@ -8,6 +8,9 @@ import javafx.scene.layout.VBox;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Stage;
 
+import java.io.File;
+import java.util.Objects;
+
 public class Main extends Application {
 
     private TextField directoryPathField;
@@ -31,6 +34,7 @@ public class Main extends Application {
         browseButton.setOnAction(e -> browseDirectory());
 
         Button searchButton = new Button("Search");
+        searchButton.setOnAction(e -> searchFiles());
 
         HBox hBox = new HBox(10, directoryPathField, browseButton);
         VBox vBox = new VBox(10, hBox, searchField, searchButton, resultArea);
@@ -48,10 +52,41 @@ public class Main extends Application {
         Stage stage = new Stage();
         stage.initOwner(directoryPathField.getScene().getWindow());
 
-        java.io.File selectedDirectory = directoryChooser.showDialog(stage);
+        File selectedDirectory = directoryChooser.showDialog(stage);
 
         if (selectedDirectory != null) {
             directoryPathField.setText(selectedDirectory.getAbsolutePath());
+        }
+    }
+
+    private void searchFiles() {
+        String directoryPath = directoryPathField.getText().trim();
+        if (directoryPath.isEmpty()) {
+            resultArea.setText("Please provide a directory path.");
+            return;
+        }
+
+        File directory = new File(directoryPath);
+        if (!directory.isDirectory()) {
+            resultArea.setText("The provided path is not a directory.");
+            return;
+        }
+
+        StringBuilder results = new StringBuilder();
+        listFilesInDirectory(directory, results);
+        resultArea.setText(results.toString());
+    }
+
+    private void listFilesInDirectory(File directory, StringBuilder results) {
+        File[] files = directory.listFiles();
+        if (files != null) {
+            for (File file : files) {
+                if (file.isDirectory()) {
+                    listFilesInDirectory(file, results);
+                } else {
+                    results.append(file.getAbsolutePath()).append("\n");
+                }
+            }
         }
     }
 
