@@ -7,7 +7,7 @@ import javafx.scene.layout.VBox;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Stage;
 
-public class Main extends Application {
+public it class Main extends Application {
 
     private TextField directoryPathField;
     private TextField searchField;
